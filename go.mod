@@ -1,4 +1,4 @@
-module github.com/davyxu/tabtoy
+module github.com/Chuangludeng/tabtoy
 
 go 1.12
 
