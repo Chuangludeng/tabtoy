@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/ahmetb/go-linq v3.0.0+incompatible
+	github.com/davyxu/tabtoy v0.0.0
 	github.com/davyxu/golexer v0.1.0
 	github.com/davyxu/golog v0.1.0
 	github.com/davyxu/protoplus v0.1.0
@@ -16,3 +17,5 @@ require (
 	google.golang.org/protobuf v1.23.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
+
+replace github.com/davyxu/tabtoy => ../tabtoy
