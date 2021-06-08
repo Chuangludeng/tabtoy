@@ -2,7 +2,13 @@
 
 高性能表格数据导出工具
 
+Chuangludeng Fork版本
+
 ![tabtoylogo](doc/logo.png)
+
+#Fork新增加功能
+
+* 可以在表中添加结构体，目前只支持Protobuf和Json [格式示例](#struct)
 
 # 特性
 * 支持Xlsx/CSV作为表格数据混合输入
@@ -463,6 +469,88 @@ static void LoadSpecifiedTable()
 
 
 # 特色功能
+
+## <span id="struct"> 定义和使用结构体 </span>
+
+* 在类型表中定义结构体，种类依然是“表头”
+
+种类 | 对象类型 | 标识名 | 字段名 | 字段类型 | 数组切割| 值 | 索引 | 标记
+---|---|---|---|---|---|---|---|---
+表头|CombatActorData|ID|ID|int| | |	是	
+表头	| CombatActorData|测试结构体1|S1|TestS|,|3
+表头	| CombatActorData|测试1|Test1|int			
+表头	| CombatActorData|测试结构体2|S2|TestS|,|2	
+表头	| TestS|ID|ID|int			
+表头	| TestS|测试|Test|int
+
+* 引用结构体类型的字段，有如下要求
+  * “数组切割”需要填  “,”
+  * “值” 填入该结构体数组的大小，最小填1（必须按结构体数组来用，即使只有1个对象）
+  * 不支持嵌套结构体
+
+* 在数据表中使用结构体
+
+![img.png](img.png)
+
+* 关于表头格式要求
+	* 表头格式是 **字段标识名[下标].结构体字段标识名**
+	* 这里请一定使用**字段标识名**,程序只按标识名查找
+	* 请按类型表定义的顺序填写表头
+	
+* 如果一个结构体数据中全为空，则不导出该结构体，如上图 测试结构体2[1] 会被跳过
+
+* 导出Protobuf定义样式
+
+```protobuf
+message CombatActorData
+{
+	int32 ID = 1;
+	string Prefab = 2;
+	CombatAttribute Attribute = 3;
+	repeated TestS S1 = 4;
+	int32 Test1 = 5;
+	repeated TestS S2 = 6;
+}
+
+message TestS
+{
+	int32 ID = 1;
+	int32 Test = 2;
+}
+```
+
+* 导出Json样式
+
+```json
+	"CombatActorData": [
+		{
+			"Attribute": 1,
+			"ID": 100001,
+			"Prefab": "Assets/Game/Arts/Character/Test/Test.prefab",
+			"S1": [
+				{
+					"ID": 1,
+					"Test": 1
+				},
+				{
+					"ID": 2,
+					"Test": 2
+				},
+				{
+					"ID": 3,
+					"Test": 3
+				}
+			],
+			"S2": [
+				{
+					"ID": 1,
+					"Test": 1
+				}
+			],
+			"Test1": 1
+		}
+	]
+```
 
 ## 定义和使用枚举
 
