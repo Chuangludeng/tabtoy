@@ -16,6 +16,8 @@ func buildDynamicType(globals *model.Globals) (protoreflect.FileDescriptor, erro
 	file.Name = proto.String(globals.CombineStructName)
 	file.Package = proto.String(globals.PackageName)
 
+	var structList []string
+
 	for _, tab := range globals.Datas.AllTables() {
 
 		var desc descriptorpb.DescriptorProto
@@ -32,6 +34,35 @@ func buildDynamicType(globals *model.Globals) (protoreflect.FileDescriptor, erro
 				fd.Label = descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum()
 			}
 
+			if globals.Types.IsStructKind(field.FieldType) {
+				found := false
+				for _, value := range structList {
+					if value == field.FieldType {
+						found = true
+						break
+					}
+				}
+				if !found {
+					var structDef descriptorpb.DescriptorProto
+					structDef.Name = proto.String(field.FieldType)
+					for index, field := range globals.Types.AllFieldByName(field.FieldType) {
+						var fd descriptorpb.FieldDescriptorProto
+						fd.Name = proto.String(field.FieldName)
+						fd.Number = proto.Int32(int32(index + 1))
+						fd.JsonName = proto.String(field.FieldName)
+						tableType2PbType(globals, field, &fd)
+						if field.IsArray() {
+							fd.Label = descriptorpb.FieldDescriptorProto_LABEL_REPEATED.Enum()
+						} else {
+							fd.Label = descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum()
+						}
+						structDef.Field = append(structDef.Field, &fd)
+					}
+
+					file.MessageType = append(file.MessageType, &structDef)
+					structList = append(structList, field.FieldType)
+				}
+			}
 			desc.Field = append(desc.Field, &fd)
 		}
 

@@ -75,6 +75,18 @@ func (self *TypeTable) IsEnumKind(objectType string) bool {
 	return false
 }
 
+// 类型是结构体
+func (self *TypeTable) IsStructKind(objectType string) bool {
+
+	for _, tf := range self.fields {
+		if tf.Define.Kind == TypeUsage_HeaderStruct && objectType == tf.Define.ObjectType {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (self *TypeTable) ResolveEnum(objectType, value string) *TypeData {
 
 	t := self.GetEnumValue(objectType, value)

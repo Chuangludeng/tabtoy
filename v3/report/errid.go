@@ -8,6 +8,7 @@ var (
 	ErrorByID = map[string]*ErrorLanguage{
 		"HeaderNotMatchFieldName":        {CHS: "表头与字段不匹配"},
 		"HeaderFieldNotDefined":          {CHS: "表头字段未定义"},
+		"HeaderFieldStructDefineError":   {CHS: "结构体在表头定义错误"},
 		"DuplicateHeaderField":           {CHS: "表头字段重复"},
 		"DuplicateKVField":               {CHS: "键值表字段重复"},
 		"UnknownFieldType":               {CHS: "未知字段类型"},

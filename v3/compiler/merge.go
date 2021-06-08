@@ -3,6 +3,7 @@ package compiler
 import (
 	"github.com/davyxu/tabtoy/v3/model"
 	"github.com/davyxu/tabtoy/v3/report"
+	"strconv"
 	"strings"
 )
 
@@ -23,16 +24,34 @@ func createOutputTable(symbols *model.TypeTable, inputTab *model.DataTable) *mod
 	}
 
 	// 将完整的表头添加到输出表的表头中
-	for col, tf := range headerFields {
+	var col int
+	for _, tf := range headerFields {
+		if symbols.IsStructKind(tf.FieldType) {
+			max, _ := strconv.Atoi(tf.Value)
+			for i := 0; i < max; i++ {
+				for _, structField := range symbols.AllFieldByName(tf.FieldType) {
+					outputHeader := outputTab.MustGetHeader(col)
+					outputHeader.Cell.Value = tf.Name + "[" + strconv.Itoa(i) + "]" + "." + structField.Name
+					outputHeader.Cell.Col = col
+					outputHeader.Cell.Row = 0
+					outputHeader.TypeInfo = structField
 
-		outputHeader := outputTab.MustGetHeader(col)
-		outputHeader.Cell.Value = tf.Name
-		outputHeader.Cell.Col = col
-		outputHeader.Cell.Row = 0
-		outputHeader.TypeInfo = tf
+					headerCell := outputTab.MustGetCell(0, col)
+					headerCell.Value = outputHeader.Cell.Value
+					col++
+				}
+			}
+		} else {
+			outputHeader := outputTab.MustGetHeader(col)
+			outputHeader.Cell.Value = tf.Name
+			outputHeader.Cell.Col = col
+			outputHeader.Cell.Row = 0
+			outputHeader.TypeInfo = tf
 
-		headerCell := outputTab.MustGetCell(0, col)
-		headerCell.Value = tf.Name
+			headerCell := outputTab.MustGetCell(0, col)
+			headerCell.Value = tf.Name
+			col++
+		}
 	}
 
 	return outputTab
@@ -83,7 +102,12 @@ func MergeData(inputList, outputList *model.DataTableList, symbols *model.TypeTa
 				}
 
 				// 用输入的表头名在输出的表头中找
-				outputHeader := outputTab.HeaderByName(inputHeader.TypeInfo.FieldName)
+				var outputHeader *model.HeaderField
+				if inputHeader.TypeInfo.ObjectType != inputTab.HeaderType {
+					outputHeader = outputTab.HeaderByHeader(inputHeader)
+				} else {
+					outputHeader = outputTab.HeaderByName(inputHeader.TypeInfo.FieldName)
+				}
 
 				if outputHeader == nil {
 					panic("输入的列头名在输出表头中找不到:" + inputHeader.TypeInfo.FieldName)
@@ -109,7 +133,6 @@ func MergeData(inputList, outputList *model.DataTableList, symbols *model.TypeTa
 				}
 			}
 		}
-
 	}
 }
 

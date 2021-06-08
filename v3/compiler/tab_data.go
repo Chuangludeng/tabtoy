@@ -39,6 +39,9 @@ func LoadDataTable(filegetter helper.FileGetter, fileName, headerType, resolveHe
 	}
 
 	for _, sheet := range file.Sheets() {
+		if strings.HasPrefix(sheet.Name(), "#") {
+			continue
+		}
 
 		tab := model.NewDataTable()
 		tab.HeaderType = headerType

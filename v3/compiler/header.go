@@ -80,12 +80,38 @@ func resolveHeaderFields(tab *model.DataTable, tableObjectType string, typeTab *
 			continue
 		}
 
-		tf := typeTab.FieldByName(tableObjectType, header.Cell.Value)
-		if tf == nil {
-			report.ReportError("HeaderFieldNotDefined", header.Cell.String(), tableObjectType)
+		var tf *model.TypeDefine = nil
+
+		ss := strings.Split(header.Cell.Value, ".")
+		key := tableObjectType
+		value := header.Cell.Value
+		if len(ss) > 1 {
+			key = ss[0]
+			value = ss[1]
+			tss := strings.Split(key, "[")
+			if len(tss) < 2 {
+				report.ReportError("HeaderFieldStructDefineError", header.Cell.String(), key)
+			}
+			key = tss[0]
+
+			structTF := typeTab.FieldByName(tableObjectType, key)
+			if structTF == nil {
+				report.ReportError("HeaderFieldNotDefined", key, tableObjectType)
+			}
+
+			key = structTF.FieldType
 		}
 
-		if headerValueExists(index+1, header.Cell.Value, tab.Headers) && !tf.IsArray() {
+		tf = typeTab.FieldByName(key, value)
+		if tf == nil {
+			report.ReportError("HeaderFieldNotDefined", header.Cell.String(), key)
+		}
+
+		if len(ss) > 1 {
+			value = key + "." + value
+		}
+
+		if headerValueExists(index+1, value, tab.Headers) && !tf.IsArray() {
 			report.ReportError("DuplicateHeaderField", header.Cell.String())
 		}
 

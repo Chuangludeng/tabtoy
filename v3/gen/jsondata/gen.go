@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/davyxu/tabtoy/v3/model"
 	"io/ioutil"
+	"strconv"
 )
 
 func Output(globals *model.Globals, param string) (err error) {
@@ -26,18 +27,53 @@ func Output(globals *model.Globals, param string) (err error) {
 
 			// 遍历每一列
 			rowData := map[string]interface{}{}
-			for col, header := range headers {
+
+			var colIndex int
+			for _, header := range headers {
 
 				if globals.CanDoAction(model.ActionNoGenFieldJsonDir, header) {
 					continue
 				}
 
-				// 在单元格找到值
-				valueCell := tab.GetCell(row, col)
+				if globals.Types.IsStructKind(header.FieldType) {
+					max, _ := strconv.Atoi(header.Value)
+					var structList []interface{}
+					for i := 0; i < max; i++ {
+						var nilNumber int
+						structMsg := map[string]interface{}{}
+						structFields := globals.Types.AllFieldByName(header.FieldType)
+						fieldsNum := len(structFields)
+						for _, field := range structFields {
+							// 在单元格找到值
+							valueCell := tab.GetCell(row, colIndex)
+							if valueCell == nil || valueCell.Value == "" {
+								nilNumber++
+								colIndex++
+								continue
+							}
 
-				var value = wrapValue(globals, valueCell, header)
+							var value = wrapValue(globals, valueCell, field)
 
-				rowData[header.FieldName] = value
+							structMsg[field.FieldName] = value
+							colIndex++
+						}
+
+						if nilNumber != fieldsNum {
+							structList = append(structList, structMsg)
+						}
+					}
+
+					rowData[header.FieldName] = structList
+				} else {
+					// 在单元格找到值
+					valueCell := tab.GetCell(row, colIndex)
+
+					var value = wrapValue(globals, valueCell, header)
+
+					rowData[header.FieldName] = value
+
+					colIndex++
+				}
 			}
 
 			tabData = append(tabData, rowData)

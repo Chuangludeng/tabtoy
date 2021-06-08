@@ -123,6 +123,9 @@ func tableType2PbType(globals *model.Globals, def *model.TypeDefine, pbDesc *des
 		if globals.Types.IsEnumKind(pbType) {
 			pbDesc.Type = descriptorpb.FieldDescriptorProto_TYPE_ENUM.Enum()
 			pbDesc.TypeName = proto.String(globals.PackageName + "." + pbType)
+		} else if globals.Types.IsStructKind(pbType) {
+			pbDesc.Type = descriptorpb.FieldDescriptorProto_TYPE_MESSAGE.Enum()
+			pbDesc.TypeName = proto.String(globals.PackageName + "." + pbType)
 		} else {
 			panic("unknown pb type: " + pbType)
 		}

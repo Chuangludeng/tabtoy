@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 	"io/ioutil"
+	"strconv"
 )
 
 func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab *model.DataTable, combineRoot *dynamicpb.Message) {
@@ -23,7 +24,8 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 
 		rowMsg := dynamicpb.NewMessage(md)
 
-		for col, field := range headers {
+		var colIndex int
+		for _, field := range headers {
 
 			if globals.CanDoAction(model.ActionNoGenFieldPbBinary, field) {
 				continue
@@ -31,21 +33,53 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 
 			fd := md.Fields().ByName(protoreflect.Name(field.FieldName))
 
-			// 在单元格找到值
-			valueCell := tab.GetCell(row, col)
-			if valueCell == nil {
-				continue
-			}
-
-			if field.IsArray() {
+			if fd.Kind() == protoreflect.MessageKind {
 				list := rowMsg.NewField(fd).List()
-				tableValue2PbValueList(globals, valueCell, field, list)
+				max, _ := strconv.Atoi(field.Value)
+				for i := 0; i < max; i++ {
+					structMD := pbFile.Messages().ByName(protoreflect.Name(field.FieldType))
+					structMsg := dynamicpb.NewMessage(structMD)
+
+					var nilNumber int
+					structFields := globals.Types.AllFieldByName(field.FieldType)
+					fieldsNum := len(structFields)
+					for _, field := range structFields {
+						// 在单元格找到值
+						valueCell := tab.GetCell(row, colIndex)
+						if valueCell == nil || valueCell.Value == "" {
+							nilNumber++
+							colIndex++
+							continue
+						}
+						structFd := structMD.Fields().ByName(protoreflect.Name(field.FieldName))
+						pbValue := tableValue2PbValue(globals, valueCell.Value, field)
+						structMsg.Set(structFd, pbValue)
+						colIndex++
+					}
+
+					if nilNumber != fieldsNum {
+						list.Append(protoreflect.ValueOf(structMsg))
+					}
+				}
 				rowMsg.Set(fd, protoreflect.ValueOfList(list))
 			} else {
-				pbValue := tableValue2PbValue(globals, valueCell.Value, field)
-				rowMsg.Set(fd, pbValue)
-			}
+				// 在单元格找到值
+				valueCell := tab.GetCell(row, colIndex)
+				if valueCell == nil {
+					colIndex++
+					continue
+				}
 
+				if field.IsArray() {
+					list := rowMsg.NewField(fd).List()
+					tableValue2PbValueList(globals, valueCell, field, list)
+					rowMsg.Set(fd, protoreflect.ValueOfList(list))
+				} else {
+					pbValue := tableValue2PbValue(globals, valueCell.Value, field)
+					rowMsg.Set(fd, pbValue)
+				}
+				colIndex++
+			}
 		}
 
 		list.Append(protoreflect.ValueOf(rowMsg))
