@@ -34,11 +34,19 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 			fd := md.Fields().ByName(protoreflect.Name(field.FieldName))
 
 			if fd.Kind() == protoreflect.MessageKind {
-				list := rowMsg.NewField(fd).List()
-				max, _ := strconv.Atoi(field.Value)
+				var max int
+				var list protoreflect.List
+				if field.IsArray() {
+					list = rowMsg.NewField(fd).List()
+					max, _ = strconv.Atoi(field.Value)
+				} else {
+					max = 1
+				}
+
+				var structMsg *dynamicpb.Message
 				for i := 0; i < max; i++ {
 					structMD := pbFile.Messages().ByName(protoreflect.Name(field.FieldType))
-					structMsg := dynamicpb.NewMessage(structMD)
+					structMsg = dynamicpb.NewMessage(structMD)
 
 					var nilNumber int
 					structFields := globals.Types.AllFieldByName(field.FieldType)
@@ -57,11 +65,16 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 						colIndex++
 					}
 
-					if nilNumber != fieldsNum {
+					if nilNumber != fieldsNum && field.IsArray(){
 						list.Append(protoreflect.ValueOf(structMsg))
 					}
 				}
-				rowMsg.Set(fd, protoreflect.ValueOfList(list))
+
+				if field.IsArray() {
+					rowMsg.Set(fd, protoreflect.ValueOfList(list))
+				} else {
+					rowMsg.Set(fd, protoreflect.ValueOfMessage(structMsg))
+				}
 			} else {
 				// 在单元格找到值
 				valueCell := tab.GetCell(row, colIndex)

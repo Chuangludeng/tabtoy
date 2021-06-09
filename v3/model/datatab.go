@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 )
 
@@ -121,8 +120,6 @@ func (self *DataTable) HeaderByName(name string) *HeaderField {
 	return nil
 }
 
-var structReg = regexp.MustCompile(`^(.+)\[(.+)\]`)
-
 func (self *DataTable) HeaderByHeader(inputHeader *HeaderField) *HeaderField {
 	for _, header := range self.Headers {
 
@@ -132,8 +129,7 @@ func (self *DataTable) HeaderByHeader(inputHeader *HeaderField) *HeaderField {
 
 		if header.TypeInfo.ObjectType == inputHeader.TypeInfo.ObjectType &&
 			header.TypeInfo.FieldName == inputHeader.TypeInfo.FieldName {
-
-			if structReg.FindString(header.Cell.Value) == structReg.FindString(inputHeader.Cell.Value) {
+			if header.Cell.Value == inputHeader.Cell.Value {
 				return header
 			}
 		}

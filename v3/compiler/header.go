@@ -89,9 +89,6 @@ func resolveHeaderFields(tab *model.DataTable, tableObjectType string, typeTab *
 			key = ss[0]
 			value = ss[1]
 			tss := strings.Split(key, "[")
-			if len(tss) < 2 {
-				report.ReportError("HeaderFieldStructDefineError", header.Cell.String(), key)
-			}
 			key = tss[0]
 
 			structTF := typeTab.FieldByName(tableObjectType, key)

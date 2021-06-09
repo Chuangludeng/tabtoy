@@ -36,11 +36,18 @@ func Output(globals *model.Globals, param string) (err error) {
 				}
 
 				if globals.Types.IsStructKind(header.FieldType) {
-					max, _ := strconv.Atoi(header.Value)
+					var max int
 					var structList []interface{}
+					if header.IsArray() {
+						max, _ = strconv.Atoi(header.Value)
+					} else {
+						max = 1
+					}
+
+					var structMsg map[string]interface{}
 					for i := 0; i < max; i++ {
 						var nilNumber int
-						structMsg := map[string]interface{}{}
+						structMsg = map[string]interface{}{}
 						structFields := globals.Types.AllFieldByName(header.FieldType)
 						fieldsNum := len(structFields)
 						for _, field := range structFields {
@@ -58,12 +65,16 @@ func Output(globals *model.Globals, param string) (err error) {
 							colIndex++
 						}
 
-						if nilNumber != fieldsNum {
+						if nilNumber != fieldsNum && header.IsArray() {
 							structList = append(structList, structMsg)
 						}
 					}
 
-					rowData[header.FieldName] = structList
+					if header.IsArray() {
+						rowData[header.FieldName] = structList
+					} else {
+						rowData[header.FieldName] = structMsg
+					}
 				} else {
 					// 在单元格找到值
 					valueCell := tab.GetCell(row, colIndex)

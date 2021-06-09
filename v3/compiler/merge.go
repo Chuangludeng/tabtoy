@@ -27,11 +27,20 @@ func createOutputTable(symbols *model.TypeTable, inputTab *model.DataTable) *mod
 	var col int
 	for _, tf := range headerFields {
 		if symbols.IsStructKind(tf.FieldType) {
-			max, _ := strconv.Atoi(tf.Value)
+			var max int
+			if tf.IsArray() {
+				max, _ = strconv.Atoi(tf.Value)
+			} else {
+				max = 1
+			}
 			for i := 0; i < max; i++ {
 				for _, structField := range symbols.AllFieldByName(tf.FieldType) {
 					outputHeader := outputTab.MustGetHeader(col)
-					outputHeader.Cell.Value = tf.Name + "[" + strconv.Itoa(i) + "]" + "." + structField.Name
+					if tf.IsArray() {
+						outputHeader.Cell.Value = tf.Name + "[" + strconv.Itoa(i) + "]" + "." + structField.Name
+					} else {
+						outputHeader.Cell.Value = tf.Name + "." + structField.Name
+					}
 					outputHeader.Cell.Col = col
 					outputHeader.Cell.Row = 0
 					outputHeader.TypeInfo = structField

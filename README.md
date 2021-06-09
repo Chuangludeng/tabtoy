@@ -479,25 +479,24 @@ static void LoadSpecifiedTable()
 表头|CombatActorData|ID|ID|int| | |	是	
 表头	| CombatActorData|测试结构体1|S1|TestS|,|3
 表头	| CombatActorData|测试1|Test1|int			
-表头	| CombatActorData|测试结构体2|S2|TestS|,|2	
+表头	| CombatActorData|测试结构体2|S2|TestS||	
 表头	| TestS|ID|ID|int			
 表头	| TestS|测试|Test|int
 
 * 引用结构体类型的字段，有如下要求
-  * “数组切割”需要填  “,”
-  * “值” 填入该结构体数组的大小，最小填1（必须按结构体数组来用，即使只有1个对象）
+  * 如果是结构体数组, “数组切割”需要填  “,”
+  * 如果是结构体数组, “值” 填入该结构体数组的大小
   * 不支持嵌套结构体
 
 * 在数据表中使用结构体
 
 ![img.png](img.png)
-
 * 关于表头格式要求
 	* 表头格式是 **字段标识名[下标].结构体字段标识名**
 	* 这里请一定使用**字段标识名**,程序只按标识名查找
 	* 请按类型表定义的顺序填写表头
 	
-* 如果一个结构体数据中全为空，则不导出该结构体，如上图 测试结构体2[1] 会被跳过
+* 如果一个结构体数据中全为空，则不导出该结构体
 
 * 导出Protobuf定义样式
 
@@ -509,7 +508,7 @@ message CombatActorData
 	CombatAttribute Attribute = 3;
 	repeated TestS S1 = 4;
 	int32 Test1 = 5;
-	repeated TestS S2 = 6;
+	TestS S2 = 6;
 }
 
 message TestS
@@ -522,6 +521,9 @@ message TestS
 * 导出Json样式
 
 ```json
+{
+	"@Tool": "github.com/davyxu/tabtoy",
+	"@Version": "",
 	"CombatActorData": [
 		{
 			"Attribute": 1,
@@ -541,15 +543,15 @@ message TestS
 					"Test": 3
 				}
 			],
-			"S2": [
-				{
-					"ID": 1,
-					"Test": 1
-				}
-			],
-			"Test1": 1
+			"S2": {
+				"ID": 5,
+				"Test": 5
+			},
+			"Test1": 1,
+			"Test2": 2
 		}
 	]
+}
 ```
 
 ## 定义和使用枚举
