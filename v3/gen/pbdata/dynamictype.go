@@ -17,6 +17,7 @@ func buildDynamicType(globals *model.Globals) (protoreflect.FileDescriptor, erro
 	file.Package = proto.String(globals.PackageName)
 
 	var structList []string
+	var structMessageType []*descriptorpb.DescriptorProto
 
 	for _, tab := range globals.Datas.AllTables() {
 
@@ -59,7 +60,7 @@ func buildDynamicType(globals *model.Globals) (protoreflect.FileDescriptor, erro
 						structDef.Field = append(structDef.Field, &fd)
 					}
 
-					file.MessageType = append(file.MessageType, &structDef)
+					structMessageType = append(structMessageType, &structDef)
 					structList = append(structList, field.FieldType)
 				}
 			}
@@ -98,6 +99,7 @@ func buildDynamicType(globals *model.Globals) (protoreflect.FileDescriptor, erro
 	}
 
 	file.MessageType = append(file.MessageType, &combine)
+	file.MessageType = append(file.MessageType, structMessageType...)
 
 	return protodesc.NewFile(&file, nil)
 }
