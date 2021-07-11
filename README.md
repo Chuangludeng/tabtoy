@@ -10,6 +10,9 @@ Chuangludeng Fork版本
 
 * 可以在表中添加结构体，目前只支持Protobuf和Json [格式示例](#struct)
 
+* 解决每次protobuf输出二进制不一致的问题。
+* 移除github.com/golang/protobuf，统一使用google.golang.org/protobuf
+
 # 特性
 * 支持Xlsx/CSV作为表格数据混合输入
 

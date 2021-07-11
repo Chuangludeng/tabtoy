@@ -3,7 +3,7 @@ package pbdata
 import (
 	"fmt"
 	"github.com/davyxu/tabtoy/v3/model"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 	"io/ioutil"
@@ -117,7 +117,7 @@ func Generate(globals *model.Globals) (data []byte, err error) {
 		exportTable(globals, pbFile, tab, combineRoot)
 	}
 
-	return proto.Marshal(combineRoot)
+	return proto.MarshalOptions{Deterministic: true}.Marshal(combineRoot)
 }
 
 func Output(globals *model.Globals, param string) (err error) {
@@ -135,7 +135,7 @@ func Output(globals *model.Globals, param string) (err error) {
 
 		exportTable(globals, pbFile, tab, combineRoot)
 
-		data, err := proto.Marshal(combineRoot)
+		data, err := proto.MarshalOptions{Deterministic: true}.Marshal(combineRoot)
 		if err != nil {
 			return err
 		}
