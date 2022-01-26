@@ -3,7 +3,6 @@ package compiler
 import (
 	"github.com/davyxu/tabtoy/v3/model"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -52,22 +51,22 @@ func LoadIndexTable(globals *model.Globals, fileName string) error {
 		pragmaList = append(pragmaList, parseIndexRow(tab, globals.Types)...)
 	}
 
-	// 按表类型排序，保证类型表先读取
-	sort.Slice(pragmaList, func(i, j int) bool {
-		a := pragmaList[i]
-		b := pragmaList[j]
-
-		if a.Kind != b.Kind {
-			return a.Kind < b.Kind
-		}
-
-		if a.TableType != b.TableType {
-			return a.TableType < b.TableType
-		}
-
-		return a.TableFileName < b.TableFileName
-
-	})
+	// 不排序,以免引起pb数据变化
+	//sort.Slice(pragmaList, func(i, j int) bool {
+	//	a := pragmaList[i]
+	//	b := pragmaList[j]
+	//
+	//	if a.Kind != b.Kind {
+	//		return a.Kind < b.Kind
+	//	}
+	//
+	//	if a.TableType != b.TableType {
+	//		return a.TableType < b.TableType
+	//	}
+	//
+	//	return a.TableFileName < b.TableFileName
+	//
+	//})
 
 	globals.IndexList = pragmaList
 
