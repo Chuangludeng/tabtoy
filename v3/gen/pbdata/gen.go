@@ -2,15 +2,16 @@ package pbdata
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strconv"
+
 	"github.com/davyxu/tabtoy/v3/model"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
-	"io/ioutil"
-	"strconv"
 )
 
-func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab *model.DataTable, combineRoot *dynamicpb.Message) {
+func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab *model.DataTable, combineRoot *dynamicpb.Message) bool {
 	md := pbFile.Messages().ByName(protoreflect.Name(tab.OriginalHeaderType))
 
 	combineField := combineRoot.Descriptor().Fields().ByName(protoreflect.Name(tab.OriginalHeaderType))
@@ -18,6 +19,8 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 
 	// 每个表的所有列
 	headers := globals.Types.AllFieldByName(tab.OriginalHeaderType)
+
+	hasIgnore := false
 
 	// 遍历每一行
 	for row := 1; row < len(tab.Rows); row++ {
@@ -28,6 +31,7 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 		for _, field := range headers {
 
 			if globals.CanDoAction(model.ActionNoGenFieldPbBinary, field) {
+				hasIgnore = true
 				continue
 			}
 
@@ -65,7 +69,7 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 						colIndex++
 					}
 
-					if nilNumber != fieldsNum && field.IsArray(){
+					if nilNumber != fieldsNum && field.IsArray() {
 						list.Append(protoreflect.ValueOf(structMsg))
 					}
 				}
@@ -99,6 +103,7 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 	}
 
 	combineRoot.Set(combineField, protoreflect.ValueOfList(list))
+	return hasIgnore
 }
 
 func Generate(globals *model.Globals) (data []byte, err error) {
@@ -133,17 +138,44 @@ func Output(globals *model.Globals, param string) (err error) {
 
 		combineRoot := dynamicpb.NewMessage(combineD)
 
-		exportTable(globals, pbFile, tab, combineRoot)
+		//这里做一个Hack,先导包含tagAction的,然后导一次不包含tagAction,分别存放
+		hasIgnore := exportTable(globals, pbFile, tab, combineRoot)
 
 		data, err := proto.MarshalOptions{Deterministic: true}.Marshal(combineRoot)
 		if err != nil {
 			return err
 		}
 
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s.pbb", param, tab.HeaderType), data, 0666)
+		if hasIgnore {
+			err = ioutil.WriteFile(fmt.Sprintf("%s/%s_Ignore.pbb", param, tab.HeaderType), data, 0666)
+		} else {
+			err = ioutil.WriteFile(fmt.Sprintf("%s/%s.pbb", param, tab.HeaderType), data, 0666)
+		}
 
 		if err != nil {
 			return err
+		}
+
+		if hasIgnore {
+
+			combineD := pbFile.Messages().ByName(protoreflect.Name(globals.CombineStructName))
+
+			combineRoot := dynamicpb.NewMessage(combineD)
+
+			globals.IgnoreTagActions = true
+			exportTable(globals, pbFile, tab, combineRoot)
+			globals.IgnoreTagActions = false
+
+			data, err := proto.MarshalOptions{Deterministic: true}.Marshal(combineRoot)
+			if err != nil {
+				return err
+			}
+
+			err = ioutil.WriteFile(fmt.Sprintf("%s/%s.pbb", param, tab.HeaderType), data, 0666)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
