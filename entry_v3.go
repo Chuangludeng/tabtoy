@@ -31,8 +31,9 @@ type V3GenEntry struct {
 var (
 	paramIndexFile = flag.String("index", "", "input multi-files configs")
 
-	paramUseGBKCSV = flag.Bool("use_gbkcsv", true, "use gbk format in csv file")
-	paramTagAction = flag.String("tag_action", "", "do action by tag selected target, format: action1:tag1+tag2|action2:tag1+tag3")
+	paramOnlyDispose = flag.String("only_dispose", "", "only dispose type")
+	paramUseGBKCSV   = flag.Bool("use_gbkcsv", true, "use gbk format in csv file")
+	paramTagAction   = flag.String("tag_action", "", "do action by tag selected target, format: action1:tag1+tag2|action2:tag1+tag3")
 
 	v3GenList = []V3GenEntry{
 		{name: "gosrc", genSingleFile: gosrc.Generate, param: paramGoOut},
@@ -114,6 +115,7 @@ func V3Entry() {
 		os.Mkdir(globals.CacheDir, 0666)
 	}
 	globals.IndexFile = *paramIndexFile
+	globals.OnlyDispose = *paramOnlyDispose
 	globals.PackageName = *paramPackageName
 	globals.CombineStructName = *paramCombineStructName
 	globals.GenBinary = *paramBinaryOut != "" || *paramBinaryDir != ""

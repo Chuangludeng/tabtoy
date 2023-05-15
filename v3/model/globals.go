@@ -27,6 +27,8 @@ type Globals struct {
 	UseGBKCSV   bool
 
 	CacheDir string
+
+	OnlyDispose string
 }
 
 func NewGlobals() *Globals {
