@@ -32,7 +32,7 @@ func readOneRow(sheet helper.TableSheet, tab *model.DataTable, row int) bool {
 	return true
 }
 
-func LoadDataTable(filegetter helper.FileGetter, fileName, headerType, resolveHeaderType string, typeTab *model.TypeTable) (ret []*model.DataTable, err error) {
+func LoadDataTable(filegetter helper.FileGetter, fileName, headerType, resolveHeaderType string, typeTab *model.TypeTable, realRead bool) (ret []*model.DataTable, err error) {
 	file, err := filegetter.GetFile(fileName)
 	if err != nil {
 		return nil, errors.Wrap(err, fileName)
@@ -51,6 +51,10 @@ func LoadDataTable(filegetter helper.FileGetter, fileName, headerType, resolveHe
 		ret = append(ret, tab)
 
 		maxCol := LoadHeader(sheet, tab, resolveHeaderType, typeTab)
+
+		if !realRead {
+			return
+		}
 
 		// 遍历所有数据行
 		for row := 0; ; row++ {

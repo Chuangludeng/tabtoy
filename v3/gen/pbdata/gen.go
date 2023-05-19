@@ -134,6 +134,10 @@ func Output(globals *model.Globals, param string) (err error) {
 
 	for _, tab := range globals.Datas.AllTables() {
 
+		if len(globals.OnlyDispose) != 0 && tab.HeaderType != globals.OnlyDispose {
+			continue
+		}
+
 		combineD := pbFile.Messages().ByName(protoreflect.Name(globals.CombineStructName))
 
 		combineRoot := dynamicpb.NewMessage(combineD)

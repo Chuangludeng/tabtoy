@@ -12,6 +12,10 @@ func Output(globals *model.Globals, param string) (err error) {
 
 	for _, tab := range globals.Datas.AllTables() {
 
+		if len(globals.OnlyDispose) != 0 && tab.HeaderType != globals.OnlyDispose {
+			continue
+		}
+
 		// 一个表的所有列
 		headers := globals.Types.AllFieldByName(tab.OriginalHeaderType)
 

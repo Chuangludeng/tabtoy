@@ -39,7 +39,7 @@ func LoadIndexTable(globals *model.Globals, fileName string) error {
 	}
 
 	// 加载原始数据
-	tabs, err := LoadDataTable(globals.IndexGetter, fileName, "IndexDefine", "IndexDefine", globals.Types)
+	tabs, err := LoadDataTable(globals.IndexGetter, fileName, "IndexDefine", "IndexDefine", globals.Types, true)
 
 	if err != nil {
 		return err

@@ -20,12 +20,12 @@ func loadVariantTables(globals *model.Globals, kvList, dataList *model.DataTable
 
 		switch pragma.Kind {
 		case model.TableKind_Data:
-
+			flag := true
 			if len(globals.OnlyDispose) != 0 && pragma.TableType != globals.OnlyDispose {
-				continue
+				flag = false
 			}
 
-			tablist, err := LoadDataTable(globals.TableGetter, pragma.TableFileName, pragma.TableType, pragma.TableType, globals.Types)
+			tablist, err := LoadDataTable(globals.TableGetter, pragma.TableFileName, pragma.TableType, pragma.TableType, globals.Types, flag)
 
 			if err != nil {
 				return err
@@ -45,7 +45,7 @@ func loadVariantTables(globals *model.Globals, kvList, dataList *model.DataTable
 			}
 
 		case model.TableKind_KeyValue:
-			tablist, err := LoadDataTable(globals.TableGetter, pragma.TableFileName, pragma.TableType, "KVDefine", globals.Types)
+			tablist, err := LoadDataTable(globals.TableGetter, pragma.TableFileName, pragma.TableType, "KVDefine", globals.Types, true)
 
 			if err != nil {
 				return err

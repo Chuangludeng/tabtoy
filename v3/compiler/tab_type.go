@@ -8,7 +8,7 @@ import (
 
 func LoadTypeTable(typeTab *model.TypeTable, indexGetter helper.FileGetter, fileName string) error {
 
-	tabs, err := LoadDataTable(indexGetter, fileName, "TypeDefine", "TypeDefine", typeTab)
+	tabs, err := LoadDataTable(indexGetter, fileName, "TypeDefine", "TypeDefine", typeTab, true)
 
 	if err != nil {
 		return err
