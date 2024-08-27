@@ -35,6 +35,7 @@ type TypeDefine struct {
 	ArraySplitter string    `tb_name:"数组切割" json:",omitempty"`
 	MakeIndex     bool      `tb_name:"索引" json:",omitempty"`
 	Tags          []string  `tb_name:"标记" json:",omitempty"`
+	Localization  bool      `tb_name:"多语言" json:",omitempty"`
 	IsBuiltin     bool      `json:",omitempty"`
 }
 
@@ -70,6 +71,7 @@ func InitBuiltinTypes(typeTab *TypeTable) {
 		{Kind: TypeUsage_HeaderStruct, ObjectType: "TypeDefine", Name: "数组切割", FieldName: "ArraySplitter", FieldType: "string"},
 		{Kind: TypeUsage_HeaderStruct, ObjectType: "TypeDefine", Name: "索引", FieldName: "MakeIndex", FieldType: "bool"},
 		{Kind: TypeUsage_HeaderStruct, ObjectType: "TypeDefine", Name: "标记", FieldName: "Tags", FieldType: "string", ArraySplitter: "|"},
+		{Kind: TypeUsage_HeaderStruct, ObjectType: "TypeDefine", Name: "多语言", FieldName: "Localization", FieldType: "bool"},
 
 		// 索引表类型
 		{Kind: TypeUsage_Enum, ObjectType: "TableKind", Name: "", FieldName: "None", FieldType: "int", Value: "0"},
@@ -88,6 +90,11 @@ func InitBuiltinTypes(typeTab *TypeTable) {
 		{Kind: TypeUsage_HeaderStruct, ObjectType: "KVDefine", Name: "值", FieldName: "Value", FieldType: "string"},
 		{Kind: TypeUsage_HeaderStruct, ObjectType: "KVDefine", Name: "数组切割", FieldName: "ArraySplitter", FieldType: "string"},
 		{Kind: TypeUsage_HeaderStruct, ObjectType: "KVDefine", Name: "标记", FieldName: "Tags", FieldType: "string", ArraySplitter: "|"},
+
+		// 多语言表
+		{Kind: TypeUsage_HeaderStruct, ObjectType: "LocDefine", Name: "Key", FieldName: "Key", FieldType: "string"},
+		{Kind: TypeUsage_HeaderStruct, ObjectType: "LocDefine", Name: "中文", FieldName: "Chinese", FieldType: "string"},
+		{Kind: TypeUsage_HeaderStruct, ObjectType: "LocDefine", Name: "繁中", FieldName: "Cht", FieldType: "string"},
 	} {
 		tf.IsBuiltin = true
 

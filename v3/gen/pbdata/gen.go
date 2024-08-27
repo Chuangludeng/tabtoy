@@ -1,17 +1,28 @@
 package pbdata
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
+	"github.com/Chuangludeng/tabtoy/v3/helper"
+	"golang.org/x/exp/slices"
 	"io/ioutil"
 	"strconv"
 
 	"github.com/davyxu/tabtoy/v3/model"
+	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab *model.DataTable, combineRoot *dynamicpb.Message) bool {
+func md5Hex(s string) string {
+	sum := md5.Sum([]byte(s))
+	return hex.EncodeToString(sum[:])
+}
+
+func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab *model.DataTable, combineRoot *dynamicpb.Message,
+	localizationMap map[string]string) bool {
 	md := pbFile.Messages().ByName(protoreflect.Name(tab.OriginalHeaderType))
 
 	combineField := combineRoot.Descriptor().Fields().ByName(protoreflect.Name(tab.OriginalHeaderType))
@@ -64,7 +75,17 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 							continue
 						}
 						structFd := structMD.Fields().ByName(protoreflect.Name(field.FieldName))
-						pbValue := tableValue2PbValue(globals, valueCell.Value, field)
+						var pbValue protoreflect.Value
+						if field.Localization && localizationMap != nil {
+							hash := md5Hex(valueCell.Value)
+							if v, ok := localizationMap[hash]; ok && v == valueCell.Value {
+								hash = tab.OriginalHeaderType + hash
+							}
+							localizationMap[hash] = valueCell.Value
+							pbValue = protoreflect.ValueOfString(hash)
+						} else {
+							pbValue = tableValue2PbValue(globals, valueCell.Value, field)
+						}
 						structMsg.Set(structFd, pbValue)
 						colIndex++
 					}
@@ -117,9 +138,11 @@ func Generate(globals *model.Globals) (data []byte, err error) {
 
 	combineRoot := dynamicpb.NewMessage(combineD)
 
+	localizationMap := make(map[string]string)
+
 	// 所有的表
 	for _, tab := range globals.Datas.AllTables() {
-		exportTable(globals, pbFile, tab, combineRoot)
+		exportTable(globals, pbFile, tab, combineRoot, localizationMap)
 	}
 
 	return proto.MarshalOptions{Deterministic: true}.Marshal(combineRoot)
@@ -132,6 +155,8 @@ func Output(globals *model.Globals, param string) (err error) {
 		return err
 	}
 
+	localizationMap := make(map[string]string)
+
 	for _, tab := range globals.Datas.AllTables() {
 
 		if len(globals.OnlyDispose) != 0 && tab.HeaderType != globals.OnlyDispose {
@@ -143,7 +168,7 @@ func Output(globals *model.Globals, param string) (err error) {
 		combineRoot := dynamicpb.NewMessage(combineD)
 
 		//这里做一个Hack,先导包含tagAction的,然后导一次不包含tagAction,分别存放
-		hasIgnore := exportTable(globals, pbFile, tab, combineRoot)
+		hasIgnore := exportTable(globals, pbFile, tab, combineRoot, localizationMap)
 
 		data, err := proto.MarshalOptions{Deterministic: true}.Marshal(combineRoot)
 		if err != nil {
@@ -167,7 +192,7 @@ func Output(globals *model.Globals, param string) (err error) {
 			combineRoot := dynamicpb.NewMessage(combineD)
 
 			globals.IgnoreTagActions = true
-			exportTable(globals, pbFile, tab, combineRoot)
+			exportTable(globals, pbFile, tab, combineRoot, nil)
 			globals.IgnoreTagActions = false
 
 			data, err := proto.MarshalOptions{Deterministic: true}.Marshal(combineRoot)
@@ -182,6 +207,53 @@ func Output(globals *model.Globals, param string) (err error) {
 			}
 		}
 	}
+
+	if len(localizationMap) == 0 {
+		return nil
+	}
+
+	keys := maps.Keys(globals.LocMap)
+	slices.Sort(keys)
+	for _, key := range keys {
+		if v, ok := localizationMap[key]; ok {
+			globals.LocMap[key].Chinese = v
+			globals.LocMap[key].State = ""
+		} else {
+			globals.LocMap[key].State = "Delete"
+		}
+	}
+
+	keys = maps.Keys(localizationMap)
+	slices.Sort(keys)
+	for _, key := range keys {
+		if _, ok := globals.LocMap[key]; !ok {
+			var newLoc model.LocDefine
+			newLoc.Key = key
+			newLoc.Chinese = localizationMap[key]
+			newLoc.State = "New"
+			globals.LocMap[key] = &newLoc
+		}
+	}
+
+	keys = maps.Keys(globals.LocMap)
+	slices.Sort(keys)
+
+	memfile := helper.NewMemFile()
+	sheet := memfile.CreateXLSXFile("Localization/TableLocalization.xlsx")
+	sheet.WriteRow("Key", "中文", "繁中", "#状态")
+	for _, key := range keys {
+		loc := globals.LocMap[key]
+		sheet.WriteRow(loc.Key, loc.Chinese, loc.Cht, loc.State)
+	}
+
+	memfile.VisitAllTable(func(data *helper.MemFileData) bool {
+		ret := data.File.Save(data.FileName)
+		if ret != nil {
+			return false
+		}
+
+		return true
+	})
 
 	return nil
 }

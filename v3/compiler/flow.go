@@ -26,6 +26,13 @@ func Compile(globals *model.Globals) (ret error) {
 	report.Log.Debugf("Loading Index file: '%s'... ", globals.IndexFile)
 	err := LoadIndexTable(globals, globals.IndexFile)
 
+	report.Log.Debugf("Loading Localization file: '%s'... ", "Localization/TableLocalization.xlsx")
+	locErr := LoadLocTable(globals, "Localization/TableLocalization.xlsx")
+
+	if locErr != nil {
+		globals.LocMap = make(map[string]*model.LocDefine)
+	}
+
 	if err != nil {
 		return err
 	}

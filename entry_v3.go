@@ -124,6 +124,7 @@ func V3Entry() {
 	idxloader.UseGBKCSV = *paramUseGBKCSV
 	globals.IndexGetter = idxloader
 	globals.UseGBKCSV = *paramUseGBKCSV
+	globals.LocalizationGetter = helper.NewFileLoader(true, globals.CacheDir)
 
 	var err error
 	if *paramTagAction != "" {

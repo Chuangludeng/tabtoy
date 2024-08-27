@@ -10,10 +10,13 @@ type Globals struct {
 	PackageName       string // 文件生成时的包名
 	CombineStructName string // 包含最终表所有数据的根结构
 
-	IndexGetter helper.FileGetter // 索引文件获取器
-	TableGetter helper.FileGetter // 其他文件获取器
+	IndexGetter        helper.FileGetter // 索引文件获取器
+	TableGetter        helper.FileGetter // 其他文件获取器
+	LocalizationGetter helper.FileGetter //多语言文件获取器
 
 	IndexList []*IndexDefine // 输入的索引文件
+
+	LocMap map[string]*LocDefine //多语言
 
 	Types *TypeTable // 输入的类型及符号
 
