@@ -78,7 +78,7 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 						var pbValue protoreflect.Value
 						if field.Localization && localizationMap != nil {
 							hash := md5Hex(valueCell.Value)
-							if v, ok := localizationMap[hash]; ok && v == valueCell.Value {
+							if v, ok := localizationMap[hash]; ok && v != valueCell.Value {
 								hash = tab.OriginalHeaderType + hash
 							}
 							localizationMap[hash] = valueCell.Value
@@ -113,7 +113,17 @@ func exportTable(globals *model.Globals, pbFile protoreflect.FileDescriptor, tab
 					tableValue2PbValueList(globals, valueCell, field, list)
 					rowMsg.Set(fd, protoreflect.ValueOfList(list))
 				} else {
-					pbValue := tableValue2PbValue(globals, valueCell.Value, field)
+					var pbValue protoreflect.Value
+					if field.Localization && localizationMap != nil {
+						hash := md5Hex(valueCell.Value)
+						if v, ok := localizationMap[hash]; ok && v != valueCell.Value {
+							hash = tab.OriginalHeaderType + hash
+						}
+						localizationMap[hash] = valueCell.Value
+						pbValue = protoreflect.ValueOfString(hash)
+					} else {
+						pbValue = tableValue2PbValue(globals, valueCell.Value, field)
+					}
 					rowMsg.Set(fd, pbValue)
 				}
 				colIndex++
