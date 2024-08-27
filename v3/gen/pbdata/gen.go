@@ -256,14 +256,11 @@ func Output(globals *model.Globals, param string) (err error) {
 		sheet.WriteRow(loc.Key, loc.Chinese, loc.Cht, loc.State)
 	}
 
-	memfile.VisitAllTable(func(data *helper.MemFileData) bool {
-		ret := data.File.Save(data.FileName)
-		if ret != nil {
-			return false
-		}
-
-		return true
-	})
+	file, _ := memfile.GetFile("Localization/TableLocalization.xlsx")
+	ret := file.Save("Localization/TableLocalization.xlsx")
+	if ret != nil {
+		return ret
+	}
 
 	return nil
 }
