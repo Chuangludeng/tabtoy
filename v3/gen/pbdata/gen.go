@@ -165,7 +165,13 @@ func Output(globals *model.Globals, param string) (err error) {
 		return err
 	}
 
-	localizationMap := make(map[string]string)
+	var localizationMap map[string]string
+	if globals.OnlyDispose == "" {
+		//只导一个表不允许使用多语言导出
+		localizationMap = make(map[string]string)
+	} else {
+		localizationMap = nil
+	}
 
 	for _, tab := range globals.Datas.AllTables() {
 
@@ -218,7 +224,7 @@ func Output(globals *model.Globals, param string) (err error) {
 		}
 	}
 
-	if len(localizationMap) == 0 {
+	if localizationMap == nil || len(localizationMap) == 0 {
 		return nil
 	}
 
